@@ -1,0 +1,84 @@
+
+# ls aliases
+alias ll='ls -alh'
+
+# Git aliases
+alias gl='git log --oneline --decorate --graph --all'
+alias gs='git status'
+alias gcam='git commit -am'
+alias gpom='git push origin master'
+alias gpob='git push origin `git rev-parse --abbrev-ref HEAD`'
+alias gpub='git push -u origin `git rev-parse --abbrev-ref HEAD`'
+alias gull='git pull'
+alias gush='git push'
+alias gb='git checkout -b'
+alias gco='git checkout'
+alias grh='git reset --hard'
+alias gclean='git branch | grep -ve " master$" | xargs git branch -D'
+
+# Folder aliases
+alias code='cd /Volumes/Data/Code'
+alias exp-devops='code && cd exp-devops'
+alias docker-ecs='code && cd docker-ecs'
+alias ecs='code && cd docker-ecs/cluster-management' 
+alias ecs-old='code && cd exp-devops/chef-repo/aws/bin/ecs'
+alias lappy='code && cd provisioning-local'
+alias packer='cd /Volumes/Data/Code/ewe-packer'
+alias comics='cd /Volumes/Data/Comics'
+alias ecstests='ecs && cd tests/acceptance'
+
+# SSH aliases
+alias volumio='ssh volumio.local'
+alias helios4='ssh helios4.local'
+
+# General useful commands
+
+alias wgetter='wget --content-disposition -c --progress=dot:giga -i'
+alias lines='pbpaste | wc -l'
+
+alias rsyncer='rsync -rv --size-only'
+
+# SSH without asking pesky signature questions
+alias sshc='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
+
+# ECS functions from docker-ecs repo
+source /Volumes/Data/Code/docker-ecs/ecs_functions.sh
+
+function aaa() {
+    SEC=$1
+    if [[ -z "$1" ]]; then
+        echo "Please provide a security context to authenticate against (test/prod/prodp)"
+    else
+        if [[ $SEC -eq 'test' ]]; then
+            AAA_ACCOUNT='085881308644'
+            AAA_DOMAIN='SEA'
+        elif [[ $SEC -eq 'prod' ]]; then
+            AAA_ACCOUNT='681113838903'
+            AAA_DOMAIN='DECAF'
+        elif [[ $SEC -eq 'prodp' ]]; then
+            AAA_ACCOUNT='681113838903'
+            AAA_DOMAIN='EXPESO'
+        else
+            echo "'$SEC' is not a valid security context (test/prod/prodp)"
+        fi
+        if [[ ! -z $AAA_ACCOUNT ]] && [[ ! -z $AAA_DOMAIN ]]; then
+            echo "aws_key_gen login -a ${AAA_DOMAIN} -r \"arn:aws:iam::${AAA_ACCOUNT}:role/AAA\" -p AAA-${SEC}"
+            aws_key_gen login -a ${AAA_DOMAIN} -r "arn:aws:iam::${AAA_ACCOUNT}:role/AAA" -p AAA-${SEC}
+            export AWS_PROFILE=AAA-${SEC}
+        fi
+    fi
+}
+
+
+ssh-make-rsakey() {
+  ssh-keygen -t rsa -b 4096 -o -a 100 -f ~/.ssh/$1 -N ""
+}
+alias runjack='jackd -d coreaudio'
+
+ebook-cover() {
+	convert $1 -resize 1400x2100^ -gravity center -extent 1400x2100 cover.jpg
+	cp $1 cover.source.jpg
+}
+
+
+

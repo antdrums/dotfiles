@@ -1,0 +1,10 @@
+
+export PATH=$PATH:/Volumes/Data/Code/Binaries/aws_key_gen:~/bin
+
+export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
+
+# For Golang
+export GOROOT="/usr/local/opt/go/libexec"
+export GOPATH="/Volumes/Data/Code/golang"
+export PATH="/Volumes/Data/Code/golang/bin:$PATH"
+
