@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# Set defaults
+SECURITY_CONTEXT=prod
+REGION=us-west-2
+FLAVOR=default
+SEGMENT=cicdtools
+ACTION=""
+
+usage() {
+  echo "Usage:"
+  echo "sopspin encrypts or decrypts the secrets for spinnaker based on the options"
+  echo "-----------"
+  echo "  sopspin [-d | -e] -r <region> -c <security_context> -s <segment> -f flavor"
+  echo "  Arguments:"
+  echo "    -e  or -d             | Required : 'encrypt' or 'decrypt'"
+  echo "    -r <region>           | Optional : AWS Region (default: us-west-2)"
+  echo "    -c <security_context> | Optional : Security context (default: prod)"
+  echo "    -s <segment>          | Optional : Segment (default: cicdtools)"
+  echo "    -f <flavor>           | Optional : Flavor (default: default)"
+  echo "-----------"
+  echo "    sopspin -h            |       Display this help message."
+  echo "-----------"
+}
+
+exit_abnormal() {                         # Function: Exit with error.
+  usage
+  exit 1
+}
+
+COUNT=0
+# Parse args
+while getopts "edhc:s:r:f:" opt; do
+  case ${opt} in
+    h )
+      usage
+      exit 0
+      ;;
+    e )
+      ACTION=encrypt
+      let COUNT++
+      ;;
+    d )
+      ACTION=decrypt
+      let COUNT++
+      ;;
+    c )
+      SECURITY_CONTEXT=${OPTARG}
+      ;;
+    s )
+      SEGMENT=${OPTARG}
+      ;;
+    r )
+      REGION=${OPTARG}
+      ;;
+    f )
+      FLAVOR=${OPTARG}
+      ;;
+    :)                                    # If expected argument omitted:
+      echo "Error: -${OPTARG} requires an argument."
+      exit_abnormal                       # Exit abnormally.
+      ;;
+    *)                                    # If unknown (any other) option:
+      exit_abnormal                       # Exit abnormally.
+      ;;
+  esac
+done
+
+set -x
+
+if [ $COUNT -ne 1 ]; then
+  echo "Error: Exactly one of either -e or -d should be specified"
+  exit_abnormal
+fi
+
+SECRETS_PATH="${SECURITY_CONTEXT}/${SEGMENT}/${REGION}/${FLAVOR}/spinnaker"
+
+sops_decrypt () {
+  sops --config .sops.yaml --output "${SECRETS_PATH}/.decrypted~secrets.yaml" -d ${SECRETS_PATH}/secrets.yaml
+}
+
+sops_encrypt () {
+  sops  --encrypted-regex jenkins_tokens --config .sops.yaml --output ${SECRETS_PATH}/secrets.yaml -e "${SECRETS_PATH}/.decrypted~secrets.yaml"
+}
+
+case ${ACTION} in
+  encrypt )
+    sops_encrypt
+    ;;
+  decrypt )
+    sops_decrypt
+    ;;
+esac
+
+set +x

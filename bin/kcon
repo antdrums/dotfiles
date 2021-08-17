@@ -1,0 +1,29 @@
+#!/bin/bash
+KCLUSTERNAME="kmc-default"
+REGIONNAME="us-west-2"
+KCONFIGSTR=""
+KCONTEXTSTR=""
+echo "1"
+while getopts ":h?c:k:a:r:" opt; do
+    case "$opt" in
+    h|\?)
+        echo "Usage: kcon [-c cluster_name] [-k kube_config] [-a alias(kube_context)] [-r region]"
+        echo "Creates Kubeconfig for specified cluster. Defaults for empty arguments:"
+        echo "-c kmc-default; -k ~/.kube/config; -a <aws cluster ARN>; -r us-west-2"
+        exit 0
+        ;;
+    c)  KCLUSTERNAME=$OPTARG
+        ;;
+    k)  KCONFIGSTR="--kubeconfig $OPTARG"
+        ;;
+    a)  KCONTEXT=$OPTARG
+        KCONTEXTSTR="--alias ${KCONTEXT}"
+        ;;
+    r)  REGIONNAME=$OPTARG
+        ;;
+    esac
+done
+shift $((OPTIND -1))
+echo "Running: aws eks --region $REGIONNAME update-kubeconfig --name $KCLUSTERNAME $KCONFIGSTR $KCONTEXTSTR"
+aws eks --region $REGIONNAME update-kubeconfig --name $KCLUSTERNAME $KCONFIGSTR $KCONTEXTSTR
+# kubectl config use-context $KCONTEXT

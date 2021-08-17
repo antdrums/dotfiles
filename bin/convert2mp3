@@ -1,0 +1,32 @@
+#!/bin/bash
+
+FILENAME=$1
+
+while read filepath
+do
+	pathname=`dirname "$filepath"`
+	newpathname="mp3/$pathname"
+	filename="$(basename "$filepath")"
+	newfilepath="$newpathname/${filename%.flac}.mp3"
+	if ! [ -f "$newfilepath" ]; then
+
+		echo "New Pathname = $newfilepath"
+		if ! [ -d "$newpathname" ]; then
+		  mkdir -p "$newpathname"
+		fi
+		[[ "$filepath" != *.flac ]] && continue
+	    album="$(metaflac --show-tag=album "$filepath" | sed 's/[^=]*=//')"
+	    artist="$(metaflac --show-tag=artist "$filepath" | sed 's/[^=]*=//')"
+	    title="$(metaflac --show-tag=title "$filepath" | sed 's/[^=]*=//')"
+	    year="$(metaflac --show-tag=date "$filepath" | sed 's/[^=]*=//')"
+	    genre="$(metaflac --show-tag=genre "$filepath" | sed 's/[^=]*=//')"
+	    tracknumber="$(metaflac --show-tag=tracknumber "$filepath" | sed 's/[^=]*=//')"
+
+	    flac --decode --stdout "$filepath" | lame --preset extreme --add-id3v2 --tt "$title" --ta "$artist" --tl "$album" --ty "$year" --tn "$tracknumber" --tg "$genre" - "$newfilepath"
+	else
+		echo "$newfilepath already exists, skipping..."
+	fi
+
+
+done < $FILENAME
+
